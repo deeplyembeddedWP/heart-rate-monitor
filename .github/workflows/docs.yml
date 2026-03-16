@@ -12,9 +12,6 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-22.04
-    strategy:
-      matrix:
-        doxygen-version: [1.9.6, 1.14.0]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -39,11 +36,11 @@ jobs:
           mv _build_sphinx/html/* deploy
 
       - name: Setup pages
-        if: github.event_name != 'pull_request' && matrix.doxygen-version == '1.14.0'
+        if: github.event_name != 'pull_request'
         uses: actions/configure-pages@v4
 
       - name: Upload pages artifact
-        if: github.event_name != 'pull_request' && matrix.doxygen-version == '1.14.0'
+        if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v3
         with:
           path: doc/deploy
@@ -52,7 +49,7 @@ jobs:
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
         with:
-          name: docs-doxygen-${{ matrix.doxygen-version }}
+          name: docs
           path: doc/deploy
 
   deploy:
