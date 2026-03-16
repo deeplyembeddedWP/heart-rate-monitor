@@ -23,10 +23,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          DOXYGEN_VERSION="${{ matrix.doxygen-version }}"
-          wget --no-verbose "https://github.com/doxygen/doxygen/releases/download/Release_${DOXYGEN_VERSION//./_}/doxygen-${DOXYGEN_VERSION}.linux.bin.tar.gz"
-          tar xf doxygen-${DOXYGEN_VERSION}.linux.bin.tar.gz
-          echo "${PWD}/doxygen-${DOXYGEN_VERSION}/bin" >> $GITHUB_PATH
+          sudo apt-get update
+          sudo apt-get install -y doxygen
           pip install -r doc/requirements.txt
 
       - name: Build
