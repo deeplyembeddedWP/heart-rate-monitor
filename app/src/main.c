@@ -33,8 +33,20 @@ int main(void) {
   LOG_INF("Heart Rate Monitor App version: %s", APP_VERSION_STRING);
 
   int err = adc_is_ready_dt(&adc_chan);
-  if (err) {
+  if (!err) {
     LOG_ERR("ADC device not ready");
+    return err;
+  }
+
+  err = adc_channel_setup_dt(&adc_chan);
+  if (err < 0) {
+    LOG_ERR("ADC channel setup failed: %d", err);
+    return err;
+  }
+
+  err = adc_sequence_init_dt(&adc_chan, &_config);
+  if (err < 0) {
+    LOG_ERR("ADC sequence initialization failed: %d", err);
     return err;
   }
 
