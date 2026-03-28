@@ -3,14 +3,22 @@
  */
 
 / {
-	example_sensor: example-sensor {
-		compatible = "zephyr,example-sensor";
-		input-gpios = <&gpio0 11 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+	zephyr,user {
+		io-channels = <&adc 0>;
 	};
+};
 
-	blink_led: blink-led {
-    	compatible = "blink-gpio-led";
-    	led-gpios = <&gpio0 14 GPIO_ACTIVE_LOW>;
-    	blink-period-ms = <1000>;
+&adc {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	status = "okay";
+	channel@0 {
+		reg = <0>;
+		zephyr,gain = "ADC_GAIN_1_6";
+		zephyr,reference = "ADC_REF_INTERNAL";
+		zephyr,acquisition-time = <ADC_ACQ_TIME(ADC_ACQ_TIME_MICROSECONDS, 40)>;
+		zephyr,input-positive = <NRF_SAADC_AIN1>; 
+		zephyr,resolution = <12>;
+		zephyr,oversampling = <4>;
 	};
 };
