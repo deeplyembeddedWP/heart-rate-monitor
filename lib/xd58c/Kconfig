@@ -1,0 +1,32 @@
+config XD58C
+    bool "XD-58C pulse sensor driver"
+    depends on ADC
+    select ADC_ASYNC
+    help
+      Enable driver for the XD-58C optical pulse sensor.
+      Provides continuous async ADC sampling, LPF, peak
+      detection, BPM calculation and real-time data output.
+
+if XD58C
+
+config XD58C_LOG_LEVEL
+    int "XD-58C log level"
+    default 3
+    range 0 4
+    help
+      0=OFF 1=ERR 2=WRN 3=INF 4=DBG
+
+config XD58C_THREAD_STACK_SIZE
+    int "Processing thread stack size"
+    default 1024
+    help
+      Stack size in bytes for the XD-58C processing thread.
+
+config XD58C_THREAD_PRIORITY
+    int "Processing thread priority"
+    default 5
+    help
+      Zephyr thread priority for the XD-58C processing thread.
+      Lower number = higher priority. Must be > ADC ISR priority.
+
+endif # XD58C
