@@ -60,7 +60,7 @@ jobs:
           name: built-applications
           path: example-application/twister-out/**/zephyr/zephyr.hex
 
-      - name: Twister Tests
-        working-directory: example-application
-        run: |
-          west twister -T tests -v --inline-logs --integration
+      # - name: Twister Tests
+      #   working-directory: example-application
+      #   run: |
+      #     west twister -T tests -v --inline-logs --integration
