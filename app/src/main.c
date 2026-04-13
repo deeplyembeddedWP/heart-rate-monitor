@@ -9,59 +9,47 @@
 
 LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 
-/*---------------------------------------------------------------------------
- * ADC channel from devicetree
- *--------------------------------------------------------------------------*/
-static const struct adc_dt_spec adc_chan =
-    ADC_DT_SPEC_GET(DT_PATH(zephyr_user));
+static struct k_sem _complete_sem;
 
-/*---------------------------------------------------------------------------
- * Message queue — ADC ISR → processing thread
- *--------------------------------------------------------------------------*/
-K_MSGQ_DEFINE(pulse_msgq, sizeof(int16_t), 20, 2);
+static enum adc_action _callback(const struct device *dev,
+                                 const struct adc_sequence *sequence,
+                                 uint16_t sampling_index) {
+  LOG_INF("ADC callback (index %d) value: %d", sampling_index,
+          ((int16_t *)sequence->buffer)[sampling_index]);
 
-/*---------------------------------------------------------------------------
- * Driver instance
- *--------------------------------------------------------------------------*/
-static struct xd58c_data sensor_data;
-static const struct xd58c_config sensor_config = XD58C_DEFAULT_CONFIG;
+  if (sampling_index >= XD58C_BUFFER_SIZE_MAX - 1) {
+    k_sem_give(&_complete_sem);
+  }
 
-/*---------------------------------------------------------------------------
- * Real-time output callback
- *
- * Called from processing thread for every sample — 100 times per second.
- * Format: "ts=<ms> raw=<mV> filt=<mV> bpm=<bpm>"
- * Parse this on the host PC to plot the waveform and BPM in real time.
- *--------------------------------------------------------------------------*/
-static void on_sample(const struct xd58c_sample *sample, void *user_data) {
-  ARG_UNUSED(user_data);
-
-  /* Tab-separated for easy Python parsing */
-  LOG_INF("%lld\t%d\t%d\t%d", sample->timestamp_ms, (int)sample->raw_mv,
-          (int)sample->filtered_mv, (int)sample->bpm);
+  return ADC_ACTION_CONTINUE;
 }
 
-/*---------------------------------------------------------------------------
- * Main
- *--------------------------------------------------------------------------*/
 int main(void) {
-  int err;
 
   LOG_INF("Heart Rate Monitor %s", APP_VERSION_STRING);
 
-  err = xd58c_init(&sensor_data, &sensor_config, &adc_chan, &pulse_msgq,
-                   on_sample, NULL);
-  if (err < 0) {
-    LOG_ERR("XD-58C init failed: %d", err);
+  int err = xd58c_init();
+  if (err) {
+    LOG_ERR("init XD58C (err %d)", err);
     return err;
   }
 
-  err = xd58c_start(&sensor_data);
-  if (err < 0) {
-    LOG_ERR("XD-58C start failed: %d", err);
+  xd58c_callback_set(_callback, NULL);
+
+  k_sem_init(&_complete_sem, 0, 1);
+
+  err = xd58c_start();
+  if (err) {
+    LOG_ERR("start XD58C (err %d)", err);
     return err;
   }
 
-  /* Processing thread drives everything — main has nothing left to do */
+  while (1) {
+    err = k_sem_take(&_complete_sem, K_FOREVER);
+    if (!err) {
+      xd58c_start();
+    }
+  }
+
   return 0;
 }
