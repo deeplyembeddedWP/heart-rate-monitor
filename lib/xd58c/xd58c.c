@@ -16,7 +16,7 @@ static struct {
   const struct adc_dt_spec adc_chan;
   struct adc_sequence_options adc_seq_opts;
   struct adc_sequence adc_seq;
-  int16_t adc_buf[XD58C_BUFFER_SIZE_MAX];
+  int16_t adc_buf;
 } _this = {
     .adc_chan = ADC_DT_SPEC_GET(DT_PATH(zephyr_user)),
 };
@@ -41,13 +41,13 @@ int xd58c_init(void) {
   }
 
   _this.adc_seq_opts.interval_us = 5000 /* 5 ms */;
-  _this.adc_seq_opts.extra_samplings = XD58C_BUFFER_SIZE_MAX - 1;
+  _this.adc_seq_opts.extra_samplings = 0;
   _this.adc_seq_opts.callback = NULL;
   _this.adc_seq_opts.user_data = NULL;
 
   _this.adc_seq.options = &_this.adc_seq_opts;
   _this.adc_seq.channels = BIT(_this.adc_chan.channel_id);
-  _this.adc_seq.buffer = _this.adc_buf;
+  _this.adc_seq.buffer = &_this.adc_buf;
   _this.adc_seq.buffer_size = sizeof(_this.adc_buf);
   _this.adc_seq.resolution = _this.adc_chan.resolution;
   _this.adc_seq.oversampling = _this.adc_chan.oversampling;
